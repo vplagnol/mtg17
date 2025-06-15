@@ -41,8 +41,11 @@ for (i in 1:ncol(pairs_matrix)) {
     if (i %% 100 == 99) {
         pair_analysis = dplyr::bind_rows(all_data)
         pair_analysis = pair_analysis[ order(pair_analysis$interaction_pval, decreasing = FALSE), ]
-        write.csv(pair_analysis, file = 'processed_data/paired_analysis.csv')
+        interesting <- dplyr::filter(pair_analysis, interaction_pval < 0.05, interaction_term > 0)
+        write.csv(interesting, file = 'processed_data/interesting_paired_analysis.csv')
     }
 }
 
+
+write.csv(pair_analysis, file = 'processed_data/paired_analysis.csv')
 
