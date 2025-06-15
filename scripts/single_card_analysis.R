@@ -6,10 +6,11 @@ if (!exists("card_data")) {
 
     for (card in all_card_names) {
         card_data [[ paste0('GIH_', card) ]] <- card_data [[ paste0('drawn_', card) ]] + card_data [[ paste0('opening_hand_', card) ]]
-        card_data <- card_data[ , -  grep(pattern = "^opening", x = names(card_data)) ]
-        card_data <- card_data[ , -  grep(pattern = "^drawn", x = names(card_data)) ]
     }
-    
+    card_data <- card_data[ , -  grep(pattern = "^opening", x = names(card_data)) ]
+    card_data <- card_data[ , -  grep(pattern = "^drawn", x = names(card_data)) ]
+
+    write.csv(card_data, file = 'processed_data/game_data_public.TDM.PremierDraft_small_GIH.csv')
 }
 
 all_card_names =  gsub(grepv(names(card_data), pattern = "GIH_"), pattern = "GIH_", replacement = "")

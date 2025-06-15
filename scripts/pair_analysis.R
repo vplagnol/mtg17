@@ -1,6 +1,8 @@
-stop()
+
+if (!exists("card_data")) card_data <- readr::read_csv("processed_data/game_data_public.TDM.PremierDraft_small_GIH.csv")
 
 card1 = 'Wail of War'; card2 = 'Shocking Sharpshooter'
+card1 = 'Delta Bloodflies'; card2 = 'Snakeskin Veil'
 
 
 all_data = list()
@@ -15,31 +17,32 @@ for (i in 1:ncol(pairs_matrix)) {
     #print(single_final_table[ single_final_table$card == card1,])
     #print(single_final_table[ single_final_table$card == card2,])
 
-    both_drawn = data[[paste0('drawn_', card1)]] >= 1 & data[[paste0('drawn_', card2)]] >= 1
-    count_pairs = sum( both_drawn )
+    both_GIH = card_data[[paste0('GIH_', card1)]] >= 1 & card_data[[paste0('GIH_', card2)]] >= 1
+    count_pairs = sum( both_GIH )
 
     if (count_pairs > 100) {
         print(card1)
         print(card2)
+
+
+        mod <- glm(data = card_data, formula = paste0('won ~ `GIH_', card1, '` * `GIH_', card2, '`'), family = binomial)
+        summary(mod)
+        interaction_pval = as.numeric(coef(summary(mod))[4, 'Pr(>|z|)'])
+        interaction_term = as.numeric(coef(summary(mod))[4, 'Estimate'])
         
-        card1OR =  single_final_table[ single_final_table$card == card1,]$OR
-        card2OR =  single_final_table[ single_final_table$card == card2,]$OR
-        combined_OR = card1OR*card2OR
-        
-        mytab = fisher.test(table(both_drawn, data$won))
         all_data[[ paste(card1, card2, sep = "_") ]] = list(card1 = card1,
                                                             card2 = card2,
                                                             count = count_pairs,
-                                                            card1OR = card1OR,
-                                                            card2OR = card2OR,
-                                                            low_CI = mytab$conf.int[1],
-                                                            high_CI = mytab$conf.int[2],
-                                                            theory_OR = combined_OR,
-                                                            observed_OR = mytab$estimate,
-                                                            flag = mytab$conf.int[1] > combined_OR)
+                                                            interaction_term = interaction_term,
+                                                            interaction_pval = interaction_pval)
+
+        if (interaction_pval < 0.05) print(summary(mod))
+    }
+    if (i %% 100 == 99) {
+        pair_analysis = dplyr::bind_rows(all_data)
+        pair_analysis = pair_analysis[ order(pair_analysis$interaction_pval, decreasing = FALSE), ]
+        write.csv(pair_analysis, file = 'processed_data/paired_analysis.csv')
     }
 }
 
-pair_analysis = dplyr::bind_rows(all_data)
-pair_analysis_flag = dplyr::filter(pair_analysis, flag)
-pair_analysis_flag =  pair_analysis_flag[ order(pair_analysis_flag$observed_OR, decreasing = TRUE),]
+
