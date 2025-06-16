@@ -15,8 +15,16 @@ pairs_matrix <- combn(all_card_names, 2)
 ## proceed by chunk of 1K
 if (!file.exists("temp"))  dir.create("temp")
 chunk<- 1
-while (file.exists(paste0("temp/pairs_chunk_", chunk, ".csv"))) chunk++
+
+oFile <- paste0("temp/pairs_chunk_", chunk, ".csv")
+while (file.exists(oFile)) {
+    chunk = chunk + 1
+    oFile <- paste0("temp/pairs_chunk_", chunk, ".csv")
+}
 message("Processing chunk ", chunk)
+
+
+
 
 start <- 1000*(chunk-1) + 1
 end <- 1000*chunk + 1
@@ -48,13 +56,13 @@ for (i in start:end) {
         if (interaction_pval < 0.05) print(summary(mod))
     }
     if (i %% 100 == 99) {
-        pair_analysis = dplyr::bind_rows(all_data)
-        pair_analysis = pair_analysis[ order(pair_analysis$interaction_term, decreasing = FALSE), ]
+        pair_analysis = dplyr::bind_rows(all_data) %>% dplyr::arrange(desc(interaction_term))
         interesting <- dplyr::filter(pair_analysis, interaction_pval < 0.05, interaction_term > 0)
-        write.csv(interesting, file = 'processed_data/interesting_paired_analysis.csv')
+        write.csv(interesting, file = 'temp/interesting_paired_analysis_temp.csv')
     }
 }
 
 
-write.csv(pair_analysis, file = paste0("temp/pairs_chunk_", chunk, ".csv"))
+pair_analysis = dplyr::bind_rows(all_data) 
+write.csv(pair_analysis, file = oFile)
 
