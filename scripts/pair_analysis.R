@@ -1,22 +1,31 @@
 
 if (!exists("card_data")) card_data <- readr::read_csv("processed_data/game_data_public.TDM.PremierDraft_small_GIH.csv")
 
+
 card1 = 'Wail of War'; card2 = 'Shocking Sharpshooter'
 card1 = 'Delta Bloodflies'; card2 = 'Snakeskin Veil'
 
 
 all_data = list()
 
+all_card_names =  gsub(grepv(names(card_data), pattern = "GIH_"), pattern = "GIH_", replacement = "")
 pairs_matrix <- combn(all_card_names, 2)
 
-for (i in 1:ncol(pairs_matrix)) {
+
+## proceed by chunk of 1K
+if (!file.exists("temp"))  dir.create("temp")
+chunk<- 1
+while (file.exists(paste0("temp/pairs_chunk_", chunk, ".csv"))) chunk++
+message("Processing chunk ", chunk)
+
+start <- 1000*(chunk-1) + 1
+end <- 1000*chunk + 1
+
+for (i in start:end) {
     print(i)
     card1 = pairs_matrix[1,i]
     card2 = pairs_matrix[2,i]
     
-    #print(single_final_table[ single_final_table$card == card1,])
-    #print(single_final_table[ single_final_table$card == card2,])
-
     both_GIH = card_data[[paste0('GIH_', card1)]] >= 1 & card_data[[paste0('GIH_', card2)]] >= 1
     count_pairs = sum( both_GIH )
 
@@ -40,12 +49,12 @@ for (i in 1:ncol(pairs_matrix)) {
     }
     if (i %% 100 == 99) {
         pair_analysis = dplyr::bind_rows(all_data)
-        pair_analysis = pair_analysis[ order(pair_analysis$interaction_pval, decreasing = FALSE), ]
+        pair_analysis = pair_analysis[ order(pair_analysis$interaction_term, decreasing = FALSE), ]
         interesting <- dplyr::filter(pair_analysis, interaction_pval < 0.05, interaction_term > 0)
         write.csv(interesting, file = 'processed_data/interesting_paired_analysis.csv')
     }
 }
 
 
-write.csv(pair_analysis, file = 'processed_data/paired_analysis.csv')
+write.csv(pair_analysis, file = paste0("temp/pairs_chunk_", chunk, ".csv"))
 
