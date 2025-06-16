@@ -28,9 +28,11 @@ end <- 1000*chunk
 
 
 while (end < ncol(pairs_matrix)) {
-    
+
+    oFile <- paste0("temp/", set, "/pairs_chunk_", chunk, ".csv")
     while (file.exists(oFile)) {
         chunk = chunk + 1
+        oFile <- paste0("temp/", set, "/pairs_chunk_", chunk, ".csv")
         start <- 1000*(chunk-1) + 1
         end <- 1000*chunk
     }
@@ -74,7 +76,6 @@ while (end < ncol(pairs_matrix)) {
     
     ## let's wrap things up
     pair_analysis = dplyr::bind_rows(all_data)
-    oFile <- paste0("temp/", set, "/pairs_chunk_", chunk, ".csv")
     write.csv(pair_analysis, file = oFile)
 
     chunk <- chunk + 1
