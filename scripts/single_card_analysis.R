@@ -1,7 +1,13 @@
 library(dplyr)
 
+set <- 'Aetherdrift'
+
+iFile <- paste0("processed_data/game_data_", set, "_reduced.csv")
+intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
+
+
 if (!exists("card_data")) {
-    card_data <- readr::read_csv("processed_data/game_data_public.TDM.PremierDraft_small.csv")
+    card_data <- readr::read_csv(iFile)
     all_card_names =  gsub(grepv(names(card_data), pattern = "drawn_"), pattern = "drawn_", replacement = "")
 
     for (card in all_card_names) {
@@ -10,7 +16,7 @@ if (!exists("card_data")) {
     card_data <- card_data[ , -  grep(pattern = "^opening", x = names(card_data)) ]
     card_data <- card_data[ , -  grep(pattern = "^drawn", x = names(card_data)) ]
 
-    write.csv(card_data, file = 'processed_data/game_data_public.TDM.PremierDraft_small_GIH.csv')
+    write.csv(card_data, file = intermediate_file)
 }
 
 all_card_names =  gsub(grepv(names(card_data), pattern = "GIH_"), pattern = "GIH_", replacement = "")
@@ -87,11 +93,18 @@ single_final_table = dplyr::bind_rows(all_data)
 single_final_table =  single_final_table[ order(single_final_table$OR, decreasing = TRUE),]
 
 
-write.csv(single_final_table, file = 'processed_data/single_card_analysis.csv')
-
-
-interesting_cards <- single_final_table[ order(single_final_table$OR_color_matched /  single_final_table$OR, decreasing = TRUE),
-                                        c('card', 'color', 'GIH_WR', 'GIH_WR_color_matched', 'nb_games_GIH_color_matched') ]
-
-interesting_cards <- dplyr::filter(interesting_cards,
+single_final_table <- dplyr::filter(single_final_table,
                                    ! card %in% c("Mountain", "Plains", "Island", "Forest", "Swamp", "Verdant Catacombs", "Marsh Flats"))
+
+write.csv(single_final_table, file = paste0('processed_data/single_card_analysis_', set, '.csv'))
+
+
+
+interesting_cards <- dplyr::mutate(single_final_table, ratio = GIH_WR_color_matched/GIH_WR) %>%
+    dplyr::arrange(desc(ratio)) %>%
+    dplyr::select(card, color, GIH_WR, GIH_WR_color_matched, nb_games_GIH_color_matched)
+
+
+print(interesting_cards)
+
+

@@ -1,5 +1,10 @@
 library(dplyr)
-if (!exists("card_data")) card_data <- readr::read_csv("processed_data/game_data_public.TDM.PremierDraft_small_GIH.csv")
+
+set <- 'Aetherdrift'
+iFile <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
+
+if (!exists("card_data")) card_data <- readr::read_csv(iFile)
+
 
 
 card1 = 'Wail of War'; card2 = 'Shocking Sharpshooter'
@@ -24,10 +29,8 @@ end <- 1000*chunk
 
 while (end < ncol(pairs_matrix)) {
     
-    oFile <- paste0("temp/pairs_chunk_", chunk, ".csv")
     while (file.exists(oFile)) {
         chunk = chunk + 1
-        oFile <- paste0("temp/pairs_chunk_", chunk, ".csv")
         start <- 1000*(chunk-1) + 1
         end <- 1000*chunk
     }
@@ -63,14 +66,15 @@ while (end < ncol(pairs_matrix)) {
         if (i %% 100 == 99) {
             pair_analysis = dplyr::bind_rows(all_data) %>% dplyr::arrange(desc(interaction_term))
             interesting <- dplyr::filter(pair_analysis, interaction_pval < 0.05, interaction_term > 0)
-            write.csv(interesting, file = 'temp/interesting_paired_analysis_temp.csv')
+            write.csv(interesting, file = paste0('temp/interesting_', set, '_paired_analysis_temp.csv'))
         }
 
     }
 
     
     ## let's wrap things up
-    pair_analysis = dplyr::bind_rows(all_data) 
+    pair_analysis = dplyr::bind_rows(all_data)
+    oFile <- paste0("temp/", set, "/pairs_chunk_", chunk, ".csv")
     write.csv(pair_analysis, file = oFile)
 
     chunk <- chunk + 1
