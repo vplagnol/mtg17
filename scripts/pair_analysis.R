@@ -1,4 +1,4 @@
-
+library(dplyr)
 if (!exists("card_data")) card_data <- readr::read_csv("processed_data/game_data_public.TDM.PremierDraft_small_GIH.csv")
 
 
