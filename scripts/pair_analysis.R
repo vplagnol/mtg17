@@ -1,6 +1,7 @@
 library(dplyr)
 
 set <- 'Aetherdrift'
+set <- 'Tarkir'
 iFile <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
 
 if (!exists("card_data")) card_data <- readr::read_csv(iFile)
@@ -9,6 +10,7 @@ if (!exists("card_data")) card_data <- readr::read_csv(iFile)
 
 card1 = 'Wail of War'; card2 = 'Shocking Sharpshooter'
 card1 = 'Delta Bloodflies'; card2 = 'Snakeskin Veil'
+card1 = 'Dalkovan Packbeasts'; card2 = 'Reigning Victor'
 
 
 
@@ -39,7 +41,7 @@ while (end < ncol(pairs_matrix)) {
     message("Processing chunk ", chunk, " from ", start, " to ", end)
 
     all_data = list()
-    for (i in start:end) {
+    for (i in start:min(end, ncol(pairs_matrix))) {
         print(i)
         card1 = pairs_matrix[1,i]
         card2 = pairs_matrix[2,i]
