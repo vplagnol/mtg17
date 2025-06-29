@@ -1,6 +1,6 @@
 library(dplyr)
 
-set <- 'Aetherdrift'
+set <- 'Tarkir'
 
 iFile <- paste0("processed_data/game_data_", set, "_reduced.csv")
 intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
@@ -8,6 +8,7 @@ intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv"
 
 if (!exists("card_data")) {
     card_data <- readr::read_csv(iFile)
+    message("Done reading")
     all_card_names =  gsub(grepv(names(card_data), pattern = "drawn_"), pattern = "drawn_", replacement = "")
 
     for (card in all_card_names) {
@@ -45,6 +46,8 @@ f <- function(B, G, R, U, W) {
 
 
 
+mean_win_rate <-  mean(card_data$won)
+mean_odds_win = mean_win_rate/(1-mean_win_rate)
 
 all_data = list()
 
@@ -56,13 +59,21 @@ for (card in all_card_names) {
     mytab <- table(card_data[[paste0('GIH_', card)]], card_data[['won']])
     fish = fisher.test(mytab[c(1,2),])
     
-    correlation_win = cor.test(card_data[[paste0('GIH_', card)]], as.numeric(card_data[['won']]))
+ 
+    unweighted_model <- glm(data = card_data, formula = paste0('won ~ `GIH_', card, '`'), family = binomial)
+    weighted_model <- glm(data = card_data, formula = paste0('won ~ `GIH_', card, '`'), family = binomial, weights = 1/(7 + card_data$num_turns))
+    odds_weighted <- mean_odds_win*exp(coef(weighted_model)[2])
+    odds_unweighted <- mean_odds_win*exp(coef(unweighted_model)[2])
+
+    GIH_win_rate_modelled_weighted <- odds_weighted/(1 + odds_weighted)
+    GIH_win_rate_modelled_unweighted <- odds_unweighted/(1 + odds_unweighted)
     
     local_res = list(card = card,
                      OR = as.numeric(fish$estimate),
                      fisher_pvalue = as.numeric(fish$p.value),
-                     correlation_with_win = as.numeric(correlation_win$estimate),
-                     GIH_WR =  as.numeric(mytab["1",]['TRUE'] / sum(mytab["1",])),
+                     GIH_WR_basic =  as.numeric(mytab["1",]['TRUE'] / sum(mytab["1",])),
+                     GIH_win_rate_modelled_weighted = GIH_win_rate_modelled_weighted,
+                     GIH_win_rate_modelled_unweighted = GIH_win_rate_modelled_unweighted,
                      W = cor(card_data[[ my_label]], card_data$deck_Plains),
                      U = cor(card_data[[ my_label]], card_data$deck_Island),
                      B = cor(card_data[[ my_label]], card_data$deck_Swamp),
@@ -90,7 +101,7 @@ for (card in all_card_names) {
 }
 
 single_final_table = dplyr::bind_rows(all_data)
-single_final_table =  single_final_table[ order(single_final_table$OR, decreasing = TRUE),]
+single_final_table =  single_final_table[ order(single_final_table$GIH_win_rate_modelled_weighted, decreasing = TRUE),]
 
 
 single_final_table <- dplyr::filter(single_final_table,
@@ -100,9 +111,9 @@ write.csv(single_final_table, file = paste0('processed_data/single_card_analysis
 
 
 
-interesting_cards <- dplyr::mutate(single_final_table, ratio = GIH_WR_color_matched/GIH_WR) %>%
+interesting_cards <- dplyr::mutate(single_final_table, ratio = GIH_WR_color_matched/GIH_WR_basic) %>%
     dplyr::arrange(desc(ratio)) %>%
-    dplyr::select(card, color, GIH_WR, GIH_WR_color_matched, nb_games_GIH_color_matched)
+    dplyr::select(card, color, GIH_WR_basic, GIH_WR_color_matched, nb_games_GIH_color_matched)
 
 
 print(interesting_cards)
