@@ -120,7 +120,17 @@ for (card in all_card_names) {
 }
 
 ## clean up the tables
-for (colour in covered_colours) card_value_per_deck[[ colour ]] <-  dplyr::bind_rows( card_value_per_deck[[ colour ]])
+first_color <- TRUE
+oFile <- paste0('processed_data/for_draft/', set, '/per_archetype_', set, '.csv')
+for (colour in covered_colours) {
+    cat(colour, "\n", file = oFile, append = !first_color)
+    first_color = FALSE
+    
+    card_value_per_deck[[ colour ]] <-  dplyr::arrange(dplyr::bind_rows( card_value_per_deck[[ colour ]]), desc(OR))
+    readr::write_csv( card_value_per_deck[[ colour ]], file = oFile, append = TRUE, col_names = TRUE)
+    cat("\n\n\n\n", file = oFile, append = TRUE)
+}
+print(oFile)
 
 single_final_table = dplyr::bind_rows(all_data)
 single_final_table =  single_final_table[ order(single_final_table$GIH_win_rate_modelled_weighted, decreasing = TRUE),]
@@ -133,9 +143,9 @@ write.csv(single_final_table, file = paste0('processed_data/single_card_analysis
 
 
 
-interesting_cards <- dplyr::mutate(single_final_table, ratio = GIH_WR_color_matched/GIH_WR_basic) %>%
-    dplyr::arrange(desc(ratio)) %>%
-    dplyr::select(card, color, GIH_WR_basic, GIH_WR_color_matched, nb_games_GIH_color_matched)
+#interesting_cards <- dplyr::mutate(single_final_table, ratio = GIH_WR_color_matched/GIH_WR_basic) %>%
+#    dplyr::arrange(desc(ratio)) %>%
+#    dplyr::select(card, color, GIH_WR_basic, GIH_WR_color_matched, nb_games_GIH_color_matched)
 
 
 print(interesting_cards)
