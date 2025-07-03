@@ -9,7 +9,7 @@ intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv"
 if (!exists("card_data")) {
     card_data <- readr::read_csv(iFile)
     message("Done reading")
-    all_card_names =  gsub(grepv(names(card_data), pattern = "drawn_"), pattern = "drawn_", replacement = "")
+    all_card_names =  gsub(grepv(names(card_data), pattern = "drawn_"), pattern = "drawn_", replacement = "")  ## list all card names
 
     for (card in all_card_names) {
         card_data [[ paste0('GIH_', card) ]] <- card_data [[ paste0('drawn_', card) ]] + card_data [[ paste0('opening_hand_', card) ]]
@@ -23,16 +23,26 @@ if (!exists("card_data")) {
 
 
 ## sanity check
-sanity <- TRUE
+sanity <- FALSE
 if (sanity) {
     test <- dplyr::filter(card_data, main_colors == 'BG')
+    #test <- dplyr::filter(card_data, main_colors == 'BG' & is.na(splash_colors))
     card <- 'Bloomvine Regent'
     print(mean(test$won))
     print(fisher.test(table(test$won, test$`GIH_Bloomvine Regent` >= 1)))
+    test2 <- dplyr::filter(test, `GIH_Bloomvine Regent` >= 1)
+    print(mean(test2$won))
+
+    test2 <- dplyr::filter(test, `GIH_Bloomvine Regent` == 1)
+    print(mean(test2$won))
+    
+    #print(fisher.test(table(card_data$won, card_data$`GIH_Bloomvine Regent` >= 1 & card_data$main_colors == 'BG')))
     stop()
 
     ##unweighted_model_s <- glm(data = test, formula = paste0('won ~ `GIH_', card, '`'), family = binomial)  # s stands for specific here
 
+
+    
 }
 
 
@@ -47,32 +57,51 @@ card_data$main_colors = factor(card_data$main_colors, levels = ref_color) #use a
 print(summary(glm(data = card_data, formula = 'won~ main_colors', family = binomial)))
 
 
+color_names <- function(c) {
+    if (c == 'WR') return ('Boros')
+    if (c == 'WG') return ('Selesnya')
+    if (c == 'WU') return ('Azorius')
+    if (c == 'WB') return ('Orzhov')
+    
+    if (c == 'BG') return ('Golgari')
+    if (c == 'BR') return ('Rakdos')
+    if (c == 'UB') return ('Dimir')
+    
+    if (c == 'UG') return ('Simic')
+    if (c == 'UR') return ('Izzet')
 
-# this function estimates the baseline color of a card
-f <- function(B, G, R, U, W) {
-    threshold <- 0 ## works with Mox Jasper which is super flat
-    res <- list()
-    if (W > threshold) res["W"] <- "W"
-    if (U > threshold) res["U"] <- "U"
-    if (B > threshold) res["B"] <- "B"
-    if (R > threshold) res["R"] <- "R"
-    if (G > threshold) res["G"] <- "G"
+    if (c == 'RG') return ('Gruul')
 
-    paste(paste(res, collapse = ''))
+    return(c)
 }
 
 
-
-colour_table <- table(card_data$main_colors)
-covered_colours <-  names(colour_table[ which(colour_table > 2000) ])
 card_value_per_deck <- list()
-for (colour in covered_colours) {card_value_per_deck[[ colour ]] <- list()}
+
+card_data$archetype <- dplyr::if_else(is.na(card_data$splash_colors),
+                                      card_data$main_colors,
+                                      paste0(card_data$main_colors, ' splash: ', card_data$splash_colors))
+colour_table <- table(card_data$archetype)
+covered_archetypes <-  names(colour_table[ which(colour_table > 3000) ])
+
+
+archetype_info <- list()
+for (my_archetype in covered_archetypes) {
+    card_value_per_deck[[ my_archetype ]] <- list()
+    averageWR <- mean(card_data$won[ card_data$archetype == my_archetype])
+    archetype_info [[ my_archetype ]] <- list(archetype = my_archetype,
+                                           averageWR = averageWR,
+                                           n_decks = sum(card_data$archetype == my_archetype))
+}
+
+archetype_info <- dplyr::bind_rows(archetype_info) %>% dplyr::arrange(desc(averageWR))
 
 mean_win_rate <-  mean(card_data$won)
 mean_odds_win = mean_win_rate/(1-mean_win_rate)
 
 all_data = list()
 
+#all_card_names <- c('Bloomvine Regent')
 for (card in all_card_names) {
     print(card)
     total_count <- sum(card_data[my_label ])
@@ -101,33 +130,37 @@ for (card in all_card_names) {
                      GIH_win_rate_modelled_unweighted = GIH_win_rate_modelled_unweighted)
     all_data[[ card ]] <- local_res
 
-    ### now we move to the colour specific analysis
-    card_colour_table <- table(card_data$main_colors[ card_data[[ my_label ]]  == 1 ] ) ## colours that card is played in
-    card_colours <- intersect(names(card_colour_table[ card_colour_table > 200 ]), covered_colours) ## intersect these colours with the generally well covered decks
+    ### now we move to the archetype specific analysis
+    card_colour_table <- table(card_data$archetype[ card_data[[ my_label ]]  >= 1 ] ) ## colours that card is played in
+    relevant_archetypes <- intersect(names(card_colour_table[ card_colour_table > 200 ]), covered_archetypes) ## intersect these colours with the generally well covered decks
     
-    for (colour in card_colours) { ## loop over the well covered colours
-        message(card, ", ", colour)
-        n_decks_with_card_in_hand <- card_colour_table[ colour ]
-        relevant_decks <- dplyr::filter(card_data,  main_colors ==  colour)
+    for (my_archetype in relevant_archetypes) { ## loop over the well covered colours
+        message("Archetyoe, ", my_archetype)
+        n_decks_with_card_in_hand <- card_colour_table[ my_archetype ]
+        relevant_decks <- dplyr::filter(card_data,  archetype == my_archetype)
         unweighted_model_s <- glm(data = relevant_decks, formula = paste0('won ~ `GIH_', card, '`'), family = binomial)  # s stands for specific here
         odds_ratio_unweighted_s <- exp(coef(unweighted_model_s)[2])
+        GIH_WR <- mean(relevant_decks$won[ relevant_decks[ my_label ] >= 1 ])
+
         local_res_s <- list(card = card,
+                            archetype = my_archetype,
                             OR = odds_ratio_unweighted_s,
+                            GIH_WR = GIH_WR,
                             n_decks_with_card_in_hand = n_decks_with_card_in_hand)
         
-        card_value_per_deck[[ colour ]][[ card ]] <- local_res_s
+        card_value_per_deck[[ my_archetype ]][[ card ]] <- local_res_s
     }    
 }
 
 ## clean up the tables
 first_color <- TRUE
 oFile <- paste0('processed_data/for_draft/', set, '/per_archetype_', set, '.csv')
-for (colour in covered_colours) {
-    cat(colour, "\n", file = oFile, append = !first_color)
+for (my_archetype in covered_archetypes) {
+    cat("Archetype:,", color_names(my_archetype), ", win rate: ", archetype_info$averageWR[ archetype_info$archetype == my_archetype ], "\n", file = oFile, append = !first_color)
     first_color = FALSE
     
-    card_value_per_deck[[ colour ]] <-  dplyr::arrange(dplyr::bind_rows( card_value_per_deck[[ colour ]]), desc(OR))
-    readr::write_csv( card_value_per_deck[[ colour ]], file = oFile, append = TRUE, col_names = TRUE)
+    card_value_per_deck[[ my_archetype ]] <-  dplyr::arrange(dplyr::bind_rows( card_value_per_deck[[ my_archetype ]]), desc(OR))
+    readr::write_csv( card_value_per_deck[[ my_archetype ]], file = oFile, append = TRUE, col_names = TRUE)
     cat("\n\n\n\n", file = oFile, append = TRUE)
 }
 print(oFile)
