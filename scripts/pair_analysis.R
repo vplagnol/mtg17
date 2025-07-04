@@ -1,7 +1,8 @@
 library(dplyr)
 
-set <- 'Aetherdrift'
-set <- 'Tarkir'
+#set <- 'Aetherdrift'
+#set <- 'Tarkir'
+set <- 'FinalFantasy'
 iFile <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
 
 if (!exists("card_data")) card_data <- readr::read_csv(iFile)
@@ -48,11 +49,12 @@ while (end < ncol(pairs_matrix)) {
         
         both_GIH = card_data[[paste0('GIH_', card1)]] >= 1 & card_data[[paste0('GIH_', card2)]] >= 1
         count_pairs = sum( both_GIH )
+
+        message(card1, " ", card2, " ", count_pairs)
         
         if (count_pairs > 100) {
             print(card1)
             print(card2)
-            
             
             mod <- glm(data = card_data, formula = paste0('won ~ `GIH_', card1, '` * `GIH_', card2, '`'), family = binomial)
             summary(mod)
@@ -68,9 +70,12 @@ while (end < ncol(pairs_matrix)) {
             if (interaction_pval < 0.05) print(summary(mod))
         }
         if (i %% 100 == 99) {
-            pair_analysis = dplyr::bind_rows(all_data) %>% dplyr::arrange(desc(interaction_term))
-            interesting <- dplyr::filter(pair_analysis, interaction_pval < 0.05, interaction_term > 0)
-            write.csv(interesting, file = paste0('temp/interesting_', set, '_paired_analysis_temp.csv'))
+            pair_analysis = dplyr::bind_rows(all_data)
+            if (nrow(pair_analysis) > 10) {
+                pair_analysis <- dplyr::arrange(pair_analysis, desc(interaction_term))
+                interesting <- dplyr::filter(pair_analysis, interaction_pval < 0.05, interaction_term > 0)
+                write.csv(interesting, file = paste0('temp/interesting_', set, '_paired_analysis_temp.csv'))
+            }
         }
 
     }

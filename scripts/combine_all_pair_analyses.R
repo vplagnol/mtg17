@@ -1,6 +1,7 @@
 library(dplyr)
-#set <- 'Tarkir'
-set <- 'Aetherdrift'
+##set <- 'Tarkir'
+##set <- 'Aetherdrift'
+set <- 'FinalFantasy'
 
 results <- list()
 all_files <- list.files(path = paste0("temp/", set), pattern = "pairs_chunk_*")

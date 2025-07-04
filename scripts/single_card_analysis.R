@@ -1,6 +1,6 @@
 library(dplyr)
 
-set <- 'Tarkir'
+set <- 'OutlawsThunder'
 
 iFile <- paste0("processed_data/game_data_", set, "_reduced.csv")
 intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
@@ -82,7 +82,7 @@ card_data$archetype <- dplyr::if_else(is.na(card_data$splash_colors),
                                       card_data$main_colors,
                                       paste0(card_data$main_colors, ' splash: ', card_data$splash_colors))
 colour_table <- table(card_data$archetype)
-covered_archetypes <-  names(colour_table[ which(colour_table > 3000) ])
+covered_archetypes <-  names(colour_table[ which(colour_table > 1500) ])
 
 
 archetype_info <- list()
@@ -104,9 +104,10 @@ all_data = list()
 #all_card_names <- c('Bloomvine Regent')
 for (card in all_card_names) {
     print(card)
-    total_count <- sum(card_data[my_label ])
-    
+
     my_label = paste0('GIH_', card)
+    total_count <- sum(card_data[my_label ])
+    if (total_count < 10) next
     
     mytab <- table(card_data[[paste0('GIH_', card)]], card_data[['won']])
     fish = fisher.test(mytab[c(1,2),])
@@ -132,7 +133,7 @@ for (card in all_card_names) {
 
     ### now we move to the archetype specific analysis
     card_colour_table <- table(card_data$archetype[ card_data[[ my_label ]]  >= 1 ] ) ## colours that card is played in
-    relevant_archetypes <- intersect(names(card_colour_table[ card_colour_table > 200 ]), covered_archetypes) ## intersect these colours with the generally well covered decks
+    relevant_archetypes <- intersect(names(card_colour_table[ card_colour_table > 100 ]), covered_archetypes) ## intersect these colours with the generally well covered decks
     
     for (my_archetype in relevant_archetypes) { ## loop over the well covered colours
         message("Archetyoe, ", my_archetype)
@@ -181,7 +182,7 @@ write.csv(single_final_table, file = paste0('processed_data/single_card_analysis
 #    dplyr::select(card, color, GIH_WR_basic, GIH_WR_color_matched, nb_games_GIH_color_matched)
 
 
-print(interesting_cards)
+#print(interesting_cards)
 
 
 
