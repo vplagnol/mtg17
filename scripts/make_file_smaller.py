@@ -4,7 +4,7 @@ import csv
 
 #iFile="data/game_data_public.TDM.PremierDraft.csv"; oFile="processed_data/game_data_Tarkir_reduced.csv"
 #iFile="data/game_data_public.FIN.PremierDraft.csv"; oFile="processed_data/game_data_FinalFantasy_reduced.csv"
-iFile="data/game_data_public.OTJ.PremierDraft.csv"; oFile="processed_data/game_data_OutlawsThunder_reduced.csv"
+iFile="data/game_data_public.OTJ.PremierDraft.csv"; oFile="processed_data/game_data_OTJ_reduced.csv"
 #iFile="data/game_data_public.DFT.PremierDraft.csv"; oFile="processed_data/game_data_Aetherdrift_reduced.csv"
 
 
