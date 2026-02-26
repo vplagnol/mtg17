@@ -1,5 +1,5 @@
 
-# Utility files to reproduce key analysis (as well as additional ones) from the 17Lands repo
+# Utility files to reproduce key analyses (as well as additional ones) from the 17Lands site
 
 
 ### Step 1: Download 17 lands data
@@ -18,6 +18,9 @@ The file ```scripts/make_file_smaller.py``` will take the input above and, if yo
 
 This is done using the following R script:
 ```Rscript  scripts/single_card_analysis.R```
+
+
+## Generate paired cards analysis
 
 The analysis of pairs of cards (i.e. find the cards that combo particularly well) can be found in:
 ```Rscript scripts/pair_analysis.R```
