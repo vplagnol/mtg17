@@ -4,7 +4,7 @@
 
 ### Step 1: Download 17 lands data
 
-The scripts expect the data to be located in this location
+The scripts expect the data to be found at this location (in the case of OTJ, i.e. Outlaws of Thunder Junction).
 ```data/game_data_public.OTJ.PremierDraft.csv```
 
 ### Step 2: Reduce the file input for R processing
