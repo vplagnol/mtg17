@@ -2,7 +2,8 @@ library(dplyr)
 
 #set <- 'Aetherdrift'
 #set <- 'Tarkir'
-set <- 'FinalFantasy'
+#set <- 'FinalFantasy'
+set  <- 'OTJ'
 iFile <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
 
 if (!exists("card_data")) card_data <- readr::read_csv(iFile)

@@ -1,6 +1,6 @@
 library(dplyr)
 
-set <- 'OutlawsThunder'
+set <- 'OTJ'
 
 iFile <- paste0("processed_data/game_data_", set, "_reduced.csv")
 intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
