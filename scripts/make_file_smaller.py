@@ -2,7 +2,7 @@
 
 import csv
 
-set_code = "ECL"  # TDM, FIN, DFT, OTJ, ...
+set_code = "TLA"  # TDM, FIN, DFT, OTJ, ...
 
 iFile = f"data/game_data_public.{set_code}.PremierDraft.csv"
 oFile = f"processed_data/game_data_{set_code}_reduced.csv"

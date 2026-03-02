@@ -1,4 +1,4 @@
-set <- 'ECL'
+set <- 'TLA'
 
 iFile <- paste0("processed_data/game_data_", set, "_reduced.csv")
 intermediate_file <- paste0("processed_data/game_data_", set, "_reduced_GIH.csv")
@@ -46,6 +46,16 @@ if (set == 'ECL') {
     list_removals_B <- c("Auntie's Sentence", 'Blight Rot', "Bogslither's Embrace", 'Nameless Inversion', 'Requiting Hex')
     list_removals_R <- c('Boulder Dash', 'Cinder Strike', 'Explosive Prodigy', 'Feed the Flames', 'Sear', 'Tweeze')
     list_removals_G <- c('Assert Perfection', 'Chomping Changeling', 'Pitiless Fists', 'Unforgiving Aim', 'Vinebred Brawler')
+
+    all_removals <- unique(c(list_removals_W, list_removals_U, list_removals_B, list_removals_R, list_removals_G))
+}
+
+if (set == 'TLA') {
+    list_removals_W <- c("Aang's Iceberg", "Airbender's Reversal", "Avatar's Wrath", 'Earth Kingdom Jailer', 'Path to Redemption', "Sandbenders' Storm")
+    list_removals_U <- c('Watery Grasp')
+    list_removals_B <- c('Day of Black Sun', 'Deadly Precision', 'Epic Downfall', 'Heartless Act', 'Sold Out', 'The Rise of Sozin')
+    list_removals_R <- c('Combustion Technique', 'Bumi Bash', 'The Last Agni Kai')
+    list_removals_G <- c('Earth Rumble', 'Rocky Rebuke')
 
     all_removals <- unique(c(list_removals_W, list_removals_U, list_removals_B, list_removals_R, list_removals_G))
 }
